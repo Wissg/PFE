@@ -19,13 +19,13 @@ if __name__ == '__main__':
 
 
     plt.plot(esp, x,label="Payoff Call")
-    plt.plot(esp, x1,label="Payoff Call")
+    plt.plot(esp, x1,label="Payoff Put")
 
     plt.axhline(y=0, color='black')
     plt.axvline(x=K, color='r', linestyle='--',label='K = '+str(K))
     plt.xlabel('Esperance[S]')
     plt.ylabel('payoff')
-    plt.title("Payoff Call")
+    plt.title("Payoff")
     plt.legend()
     plt.savefig('Graph\payoffCall.png')
 
