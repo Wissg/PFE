@@ -27,7 +27,7 @@ if __name__ == '__main__':
     plt.ylabel('payoff')
     plt.title("Payoff")
     plt.legend()
-    plt.savefig('Graph\payoffCall.png')
+    plt.savefig('Graph\payoff.png')
 
 
 
