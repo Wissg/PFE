@@ -25,7 +25,7 @@ if __name__ == '__main__':
     plt.axvline(x=K, color='r', linestyle='--',label='K = '+str(K))
     plt.xlabel('Esperance[S]')
     plt.ylabel('payoff')
-    plt.title("Payoff")
+    plt.title("Payoff (K = "+str(K)+", prime = "+str(p)+")")
     plt.legend()
     plt.savefig('Graph\payoff.png')
 
