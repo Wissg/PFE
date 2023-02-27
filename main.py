@@ -78,30 +78,31 @@ def delta(S0, r, K, T, sigma, N, Nmc, h):
     return (C_up - C_down) / (2 * S0 * h)
 
 
-def phi(t,x, T, S):
-    I = 0
-    for i in range(t,N):
-        I += S[i]*dt
-
-    return np.mean(np.maximum((S[T]- S[t])/T - x,0))
+def phi(t, x, T, S, Nmc, N,dt):
+    I2 = np.zeros(Nmc)
+    for j in range(Nmc):
+        I = 0
+        for i in range(t, N):
+            I += S[i] * dt
+        I2[j] = I
+    return np.maximum(np.mean(I2) - x, 0)
 
 
 def EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc):
-    t=0
+    t = 0
     dt = T / N
-    S = np.zeros(N+1)
+    S = np.zeros(N + 1)
     rho = 1 / T
-    epsilon = np.zeros(N+1)
+    epsilon = np.zeros(N + 1)
     epsilon[0] = S0
     S[0] = S0
-    ph = np.zeros(Nmc+1)
+    ph = np.zeros(Nmc + 1)
     for i in range(Nmc):
         for j in range(0, N):
             dW = np.sqrt(dt) * np.random.randn(1)
             S[j + 1] = S[j] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
             epsilon[j + 1] = epsilon[j] * (1 - sigma * dW - r * dt + sigma ** 2 * dt) - rho * dt
-        ph[i] = phi(t,np.mean(epsilon),T,S)
-
+        ph[i] = phi(t, K/S0, T, S,Nmc,N,dt)
     return np.exp(-r * T) * S0 * np.mean(ph)
 
 
@@ -148,7 +149,7 @@ if __name__ == '__main__':
     edp = np.zeros(len(S))
 
     for i in range(len(S)):
-        calls[i] , calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
+        calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
         # puts[i] , puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
         # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
         # print("Asian call option price:", calls[i])
@@ -171,4 +172,3 @@ if __name__ == '__main__':
     # plt.legend()
     # plt.savefig('Graph\delta.png')
     # plt.show()
-
