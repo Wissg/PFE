@@ -147,6 +147,67 @@ def Log_return_symetrique(Nmc, T, N, K, So, r, sigma):
     option_price_red_geo = np.mean(Res_geo) * 0.5
     return option_price, option_price_geo, option_price_red, option_price_red_geo
 
+def Asian_solver(m,ns,nI,Smax,Imax,r,D,T,sigma,p,phi1,phi2):
+    dx=Smax/N
+    dt=T/m
+    f=np.zeros(shape=(N+1,m+1))
+    x=np.linspace(0,Smax,ns+1)
+    t=np.linspace(0,T,m+1)
+    for i in range(N+1):
+
+        f[i,m]=np.maximum(-i*dx,0)
+
+    i=np.arange(0,N)
+    M=np.zeros(shape=(N+1,m+1))
+
+    for n in range(0, M + 1):
+        for i in range(1, N + 1):
+
+    for k in range(N-1,m-1):
+        for p in range()
+        a[i]=-dt/4 * (-(i*r + 1/(T*delta_x) + sigma**2*i**2))
+        b[i]=-dt/4 * (-(i*r + 1/(T*delta_x) - sigma**2*i**2))
+        c[i]= 1 + dt*0.5*sigma**2*i**2
+        M[i,i-1]=a[i]
+        M[i,i]=b[i]
+        M[i,i+1]=c[i]
+        x[:,nI,k]=phi1(x,Imax,t[k])
+        for j in range(nI-1,-1,-1):
+            F[0]=p(0,I[j]/T)*np.exp(-r(T-t[k]))
+            F[i]=x[i]*dt/dI*x[i,j+1,k]+x[i,j,k+1]
+            F[ns]=phi2(Smax,I[j],t[k])
+            x[:,j,k]= np.linalg.solve(M,F)
+    return x
+
+def Crank_Nicolson(Kmax, S0, r, Tmax, N, M, Beta1, Beta2, sigma):
+    K = np.linspace(0, Kmax, N + 2)
+    deltaK = Kmax / (N + 1)
+    T = np.linspace(0, Tmax, M + 2)
+    deltat = Tmax / (M + 1)
+
+    V = np.zeros(shape=(M + 2, N + 2))
+    C = np.zeros(shape=(M + 2, N + 2))
+    C2 = np.zeros(shape=(M + 2, N + 2))
+    A = np.zeros(N + 1)
+    B = np.zeros(N + 1)
+    D = np.zeros(N + 1)
+    D2 = np.zeros(N + 1)
+
+    for i in range(N + 2):
+        V[0, i] = np.maximum(S0 - K[i], 0)
+
+    for n in range(1, M + 2):
+        V[n, 0] = S0
+        V[n, N + 1] = 0
+
+    for n in range(0, M + 1):
+        for i in range(1, N + 1):
+            A[i] = -deltat/4 * (-(i*r + 1/(T*delta_x) + sigma**2*i**2))
+            B[i] = -deltat/4 * (-(i*r + 1/(T*delta_x) - sigma**2*i**2))
+            D[i] = 1 + dt*0.5*sigma**2*i**2
+
+
+    return V
 
 if __name__ == '__main__':
 
