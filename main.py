@@ -23,8 +23,8 @@ def asian_option_price_call(S0, r, K, T, N, sigma, Nmc):
             S[j] = S[j - 1] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
         S_avg[i] = np.mean(S)
         S_avg_geo[i] = statistics.geometric_mean(S)
-        payoffs[i] = max(S_avg[i] - K, 0)
-        payoffs_geo[i] = max(S_avg_geo[i] - K, 0)
+        payoffs[i] = np.maximum(S_avg[i] - K, 0)
+        payoffs_geo[i] = np.maximum(S_avg_geo[i] - K, 0)
 
     option_price = np.exp(-r * T) * np.mean(payoffs)
     option_price_geo = np.exp(-r * T) * np.mean(payoffs_geo)
@@ -47,8 +47,8 @@ def asian_option_price_put(S0, r, K, T, N, sigma, Nmc):
             S[j] = S[j - 1] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
         S_avg[i] = np.mean(S)
         S_avg_geo[i] = statistics.geometric_mean(S)
-        payoffs[i] = max(K - S_avg[i], 0)
-        payoffs_geo[i] = max(K - S_avg_geo[i], 0)
+        payoffs[i] = np.maximum(K - S_avg[i], 0)
+        payoffs_geo[i] = np.maximum(K - S_avg_geo[i], 0)
 
     option_price = np.exp(-r * T) * np.mean(payoffs)
     option_price_geo = np.exp(-r * T) * np.mean(payoffs_geo)
@@ -78,7 +78,7 @@ def delta(S0, r, K, T, sigma, N, Nmc, h):
     return (C_up - C_down) / (2 * S0 * h)
 
 
-def phi(t, x, T, S, Nmc, N,dt):
+def phi(t, x, T, S, Nmc, N, dt):
     I2 = np.zeros(Nmc)
     for j in range(Nmc):
         I = 0
@@ -102,8 +102,50 @@ def EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc):
             dW = np.sqrt(dt) * np.random.randn(1)
             S[j + 1] = S[j] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
             epsilon[j + 1] = epsilon[j] * (1 - sigma * dW - r * dt + sigma ** 2 * dt) - rho * dt
-        ph[i] = phi(t, K/S0, T, S,Nmc,N,dt)
+        ph[i] = phi(t, K / S0, T, S, Nmc, N, dt)
     return np.exp(-r * T) * S0 * np.mean(ph)
+
+
+def Log_return_symetrique(Nmc, T, N, K, So, r, sigma):
+
+    dt = T / N
+    S_sym = np.zeros(N + 1)
+    S = np.zeros(N + 1)
+    S[0] = So
+    S_sym[0] = So
+    S_avg = np.zeros(Nmc + 1)
+    S_geo = np.zeros(Nmc + 1)
+    S_sym_avg = np.zeros(Nmc + 1)
+    S_sym_geo = np.zeros(Nmc + 1)
+    Res_geo = np.zeros(Nmc + 1)
+    Res = np.zeros(Nmc + 1)
+    payoffs = np.zeros(Nmc + 1)
+    payoffs_geo = np.zeros(Nmc + 1)
+    payoffs_sym = np.zeros(Nmc + 1)
+    payoffs_sym_geo = np.zeros(Nmc + 1)
+
+    for i in range(Nmc):
+        for j in range(0, N):
+            dW = np.sqrt(dt) * np.random.randn(1)
+            S[j + 1] = S[j] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
+            S_sym[j + 1] = S[j] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * -dW)
+        S_avg[i] = np.mean(S)
+
+        S_geo[i] = statistics.geometric_mean(S)
+        S_sym_avg[i] = np.mean(S_sym)
+        S_sym_geo[i] = statistics.geometric_mean(S_sym)
+        payoffs[i] = np.maximum(S_avg[i] - K, 0)
+        payoffs_geo[i] = np.maximum(S_geo[i] - K, 0)
+        payoffs_sym[i] = np.maximum(S_sym_avg[i] - K, 0)
+        payoffs_sym_geo[i] = np.maximum(S_sym_geo[i] - K, 0)
+        Res_geo[i] = payoffs_geo[i] + payoffs_sym_geo[i]
+        Res[i] = payoffs[i] + payoffs_sym[i]
+
+    option_price = np.mean(payoffs)
+    option_price_geo = np.mean(payoffs_geo)
+    option_price_red = np.mean(Res) * 0.5
+    option_price_red_geo = np.mean(Res_geo) * 0.5
+    return option_price, option_price_geo, option_price_red, option_price_red_geo
 
 
 if __name__ == '__main__':
@@ -136,7 +178,7 @@ if __name__ == '__main__':
     r = 0.1
     sigma = 0.5
     T = 1
-    N = 100
+    N = 1000
     Nmc = 100
     S = np.linspace(S0, 20, 20)
     h = 0.000001
@@ -148,23 +190,23 @@ if __name__ == '__main__':
     delt = np.zeros(len(S))
     edp = np.zeros(len(S))
 
-    for i in range(len(S)):
-        calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
-        # puts[i] , puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
-        # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
-        # print("Asian call option price:", calls[i])
-        # print("Asian put option price:", puts[i])
-        edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
-    plt.plot(S, calls, label='Asian Call arithmétique')
-    plt.plot(S, edp, label='edp')
+    # for i in range(len(S)):
+    #     calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
+    #     # puts[i] , puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
+    #     # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
+    #     # print("Asian call option price:", calls[i])
+    #     # print("Asian put option price:", puts[i])
+    #     edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
+    # plt.plot(S, calls, label='Asian Call arithmétique')
+    # plt.plot(S, edp, label='edp')
     # plt.plot(S, puts, label='Asian Put arithmétique')
     # plt.plot(S, calls_geo, label='Asian Call géométrique')
     # plt.plot(S, puts_geo, label='Asian Put géométrique')
-    plt.xlabel('$S_0$')
-    plt.ylabel('Price Value')
-    plt.legend()
+    # plt.xlabel('$S_0$')
+    # plt.ylabel('Price Value')
+    # plt.legend()
     # plt.savefig('Graph\AsianOptionPrice.png')
-    plt.show()
+    # plt.show()
     #
     # plt.plot(S, delt, label='delta call')
     # plt.xlabel('$S_0$')
@@ -172,3 +214,33 @@ if __name__ == '__main__':
     # plt.legend()
     # plt.savefig('Graph\delta.png')
     # plt.show()
+
+    S0 = 10
+    K = 1
+    r = 0.1
+    sigma = 0.5
+    T = 1
+    N = np.linspace(10, 100, 100)
+    Nmc = 1000
+
+    option_price = np.zeros(len(N))
+    option_price_geo = np.zeros(len(N))
+    option_price_red = np.zeros(len(N))
+    option_price_red_geo = np.zeros(len(N))
+
+    for i in range(len(N)):
+        option_price[i], option_price_geo[i], option_price_red[i], option_price_red_geo[i] = Log_return_symetrique(Nmc,
+                                                                                                                   T, int(N[i]),
+                                                                                                                   K,
+                                                                                                                   S0,
+                                                                                                                   r,
+                                                                                                                   sigma)
+
+    # plt.plot(S, Valeur1, label="estime1")
+    plt.plot(N, option_price, label="option_price")
+    plt.plot(N, option_price_geo, label="estoption_price_geo")
+    plt.plot(N, option_price_red, label="option_price_red")
+    plt.plot(N, option_price_red_geo, label="option_price_red_geo")
+
+    plt.legend()
+    plt.show()
