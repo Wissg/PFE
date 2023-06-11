@@ -32,6 +32,63 @@ def asian_option_price_call(S0, r, K, T, N, sigma, Nmc):
     return option_price, option_price_geo
 
 
+def calculate_floating_strike(S):
+    K = S[0]  # Initialisation du prix d'exercice flottant à S0 (prix initial de l'actif sous-jacent)
+    for j in range(1, len(S)):
+        K = np.maximum(K, S[j])  # Mise à jour du prix d'exercice flottant en prenant le maximum entre K et S[j]
+    return K
+
+
+def asian_option_price_call_flottant(S0, r, K, T, N, sigma, Nmc):
+    dt = T / N
+    S_avg = np.zeros(Nmc)
+    S_avg_geo = np.zeros(Nmc)
+    S = np.zeros(N + 1)
+    payoffs = np.zeros(Nmc)
+    payoffs_geo = np.zeros(Nmc)
+
+    for i in range(Nmc):
+        S[0] = S0
+        for j in range(1, N + 1):
+            dW = np.sqrt(dt) * np.random.randn(1)
+            S[j] = S[j - 1] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
+        S_avg[i] = np.mean(S)
+        S_avg_geo[i] = statistics.geometric_mean(S)
+        payoffs[i] = np.maximum(S[T] - S_avg[i], 0)  # Utilisation du dernier prix d'exercice flottant
+        payoffs_geo[i] = np.maximum(S[T] - S_avg_geo[i], 0)  # Utilisation du dernier prix d'exercice flottant
+
+    option_price = np.exp(-r * T) * np.mean(payoffs)
+    option_price_geo = np.exp(-r * T) * np.mean(payoffs_geo)
+
+    return option_price, option_price_geo
+
+
+def asian_option_price_put_flottant(S0, r, T, N, sigma, Nmc):
+    dt = T / N
+    S_avg = np.zeros(Nmc)
+    S_avg_geo = np.zeros(Nmc)
+    S = np.zeros(N + 1)
+    payoffs = np.zeros(Nmc)
+    payoffs_geo = np.zeros(Nmc)
+
+    for i in range(Nmc):
+        S[0] = S0
+        K = S0  # Initialisation du premier prix d'exercice flottant à S0
+        for j in range(1, N + 1):
+            dW = np.sqrt(dt) * np.random.randn(1)
+            S[j] = S[j - 1] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
+        K = S[N]  # Mise à jour du prix d'exercice flottant
+        S_avg[i] = np.mean(S)
+        S_avg_geo[i] = statistics.geometric_mean(S)
+        payoffs[i] = np.maximum(K - S_avg[i], 0)  # Utilisation du dernier prix d'exercice flottant
+        payoffs_geo[i] = np.maximum(K - S_avg_geo[i], 0)  # Utilisation du dernier prix d'exercice flottant
+
+    option_price = np.exp(-r * T) * np.mean(payoffs)
+    option_price_geo = np.exp(-r * T) * np.mean(payoffs_geo)
+
+    return option_price, option_price_geo
+
+
 def asian_option_price_put(S0, r, K, T, N, sigma, Nmc):
     dt = T / N
     S_avg = np.zeros(Nmc)
@@ -107,7 +164,6 @@ def EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc):
 
 
 def Log_return_symetrique(Nmc, T, N, K, So, r, sigma):
-
     dt = T / N
     S_sym = np.zeros(N + 1)
     S = np.zeros(N + 1)
@@ -147,67 +203,66 @@ def Log_return_symetrique(Nmc, T, N, K, So, r, sigma):
     option_price_red_geo = np.mean(Res_geo) * 0.5
     return option_price, option_price_geo, option_price_red, option_price_red_geo
 
-def Asian_solver(m,ns,nI,Smax,Imax,r,D,T,sigma,p,phi1,phi2):
-    dx=Smax/N
-    dt=T/m
-    f=np.zeros(shape=(N+1,m+1))
-    x=np.linspace(0,Smax,ns+1)
-    t=np.linspace(0,T,m+1)
-    for i in range(N+1):
 
-        f[i,m]=np.maximum(-i*dx,0)
+# def Asian_solver(m,ns,nI,Smax,Imax,r,D,T,sigma,p,phi1,phi2):
+#     dx=Smax/N
+#     dt=T/m
+#     f=np.zeros(shape=(N+1,m+1))
+#     x=np.linspace(0,Smax,ns+1)
+#     t=np.linspace(0,T,m+1)
+#     for i in range(N+1):
+#
+#         f[i,m]=np.maximum(-i*dx,0)
+#
+#     i=np.arange(0,N)
+#     M=np.zeros(shape=(N+1,m+1))
+#
+#     for n in range(0, M + 1):
+#         for i in range(1, N + 1):
+#
+#     for k in range(N-1,m-1):
+#         for p in range(N):
+#             a[i]=-dt/4 * (-(i*r + 1/(T*delta_x) + sigma**2*i**2))
+#             b[i]=-dt/4 * (-(i*r + 1/(T*delta_x) - sigma**2*i**2))
+#             c[i]= 1 + dt*0.5*sigma**2*i**2
+#             M[i,i-1]=a[i]
+#             M[i,i]=b[i]
+#             M[i,i+1]=c[i]
+#             x[:,nI,k]=phi1(x,Imax,t[k])
+#             for j in range(nI-1,-1,-1):
+#                 F[0]=p(0,I[j]/T)*np.exp(-r(T-t[k]))
+#                 F[i]=x[i]*dt/dI*x[i,j+1,k]+x[i,j,k+1]
+#                 F[ns]=phi2(Smax,I[j],t[k])
+#                 x[:,j,k]= np.linalg.solve(M,F)
+#     return x
 
-    i=np.arange(0,N)
-    M=np.zeros(shape=(N+1,m+1))
+def Crank_Nicolson(Kmax, S0, r, T, N, M, x_max, x_min, sigma):
+    x = np.linspace(x_min, x_max, N + 1)
+    t = np.linspace(0, T, M + 1)
+    deltat = T / (M + 1)
+    delta_x = (x_max - x_min) / (N + 1)
 
-    for n in range(0, M + 1):
-        for i in range(1, N + 1):
-
-    for k in range(N-1,m-1):
-        for p in range()
-        a[i]=-dt/4 * (-(i*r + 1/(T*delta_x) + sigma**2*i**2))
-        b[i]=-dt/4 * (-(i*r + 1/(T*delta_x) - sigma**2*i**2))
-        c[i]= 1 + dt*0.5*sigma**2*i**2
-        M[i,i-1]=a[i]
-        M[i,i]=b[i]
-        M[i,i+1]=c[i]
-        x[:,nI,k]=phi1(x,Imax,t[k])
-        for j in range(nI-1,-1,-1):
-            F[0]=p(0,I[j]/T)*np.exp(-r(T-t[k]))
-            F[i]=x[i]*dt/dI*x[i,j+1,k]+x[i,j,k+1]
-            F[ns]=phi2(Smax,I[j],t[k])
-            x[:,j,k]= np.linalg.solve(M,F)
-    return x
-
-def Crank_Nicolson(Kmax, S0, r, Tmax, N, M, Beta1, Beta2, sigma):
-    K = np.linspace(0, Kmax, N + 2)
-    deltaK = Kmax / (N + 1)
-    T = np.linspace(0, Tmax, M + 2)
-    deltat = Tmax / (M + 1)
-
-    V = np.zeros(shape=(M + 2, N + 2))
-    C = np.zeros(shape=(M + 2, N + 2))
-    C2 = np.zeros(shape=(M + 2, N + 2))
+    V = np.zeros(shape=(M + 1, N + 1))
     A = np.zeros(N + 1)
     B = np.zeros(N + 1)
-    D = np.zeros(N + 1)
-    D2 = np.zeros(N + 1)
+    C = np.zeros(N + 1)
 
-    for i in range(N + 2):
-        V[0, i] = np.maximum(S0 - K[i], 0)
+    V[:, 0] = 0
 
     for n in range(1, M + 2):
-        V[n, 0] = S0
-        V[n, N + 1] = 0
+        V[0, n] = 1 / (r * T) * (1 - np.exp(-r * t[n]))
+        V[n, N] = 0
 
     for n in range(0, M + 1):
         for i in range(1, N + 1):
-            A[i] = -deltat/4 * (-(i*r + 1/(T*delta_x) + sigma**2*i**2))
-            B[i] = -deltat/4 * (-(i*r + 1/(T*delta_x) - sigma**2*i**2))
-            D[i] = 1 + dt*0.5*sigma**2*i**2
+            A[i] = deltat((sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 - (1 / T + r * x[i]) / 2 * delta_x)
+            B[i] = deltat(-(sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 - (1 / deltat))
+            C[i] = deltat((sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 + (1 / T + r * x[i]) / 2 * delta_x)
 
+            V[i, n + 1] = A[i] * V[i - 1, n] + B[i] * V[i, n] + C[i] * V[i + 1, n]
 
     return V
+
 
 if __name__ == '__main__':
 
@@ -245,29 +300,36 @@ if __name__ == '__main__':
     h = 0.000001
 
     calls = np.zeros(len(S))
+    callsFloat = np.zeros(len(S))
     puts = np.zeros(len(S))
     calls_geo = np.zeros(len(S))
+    calls_geoFloat = np.zeros(len(S))
     puts_geo = np.zeros(len(S))
     delt = np.zeros(len(S))
     edp = np.zeros(len(S))
 
-    # for i in range(len(S)):
-    #     calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
-    #     # puts[i] , puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
-    #     # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
-    #     # print("Asian call option price:", calls[i])
-    #     # print("Asian put option price:", puts[i])
-    #     edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
-    # plt.plot(S, calls, label='Asian Call arithmétique')
-    # plt.plot(S, edp, label='edp')
-    # plt.plot(S, puts, label='Asian Put arithmétique')
-    # plt.plot(S, calls_geo, label='Asian Call géométrique')
-    # plt.plot(S, puts_geo, label='Asian Put géométrique')
-    # plt.xlabel('$S_0$')
-    # plt.ylabel('Price Value')
-    # plt.legend()
+    for i in range(len(S)):
+        calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
+        puts[i], puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
+        delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
+        print("Asian call option price:", calls[i])
+        print("Asian put option price:", puts[i])
+        edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
+        callsFloat[i], calls_geoFloat[i] = asian_option_price_call_flottant(S[i], r, K, T, N, sigma, Nmc)
+
+    plt.plot(S, callsFloat, label='Asian Call arithmétique flottant')
+    plt.plot(S, calls_geoFloat, label='Asian Call géométrique flottant')
+
+    plt.plot(S, calls, label='Asian Call arithmétique')
+    plt.plot(S, edp, label='edp')
+    plt.plot(S, puts, label='Asian Put arithmétique')
+    plt.plot(S, calls_geo, label='Asian Call géométrique')
+    plt.plot(S, puts_geo, label='Asian Put géométrique')
+    plt.xlabel('$S_0$')
+    plt.ylabel('Price Value')
+    plt.legend()
     # plt.savefig('Graph\AsianOptionPrice.png')
-    # plt.show()
+    plt.show()
     #
     # plt.plot(S, delt, label='delta call')
     # plt.xlabel('$S_0$')
@@ -291,7 +353,10 @@ if __name__ == '__main__':
 
     for i in range(len(N)):
         option_price[i], option_price_geo[i], option_price_red[i], option_price_red_geo[i] = Log_return_symetrique(Nmc,
-                                                                                                                   T, int(N[i]),
+                                                                                                                   T,
+                                                                                                                   int(
+                                                                                                                       N[
+                                                                                                                           i]),
                                                                                                                    K,
                                                                                                                    S0,
                                                                                                                    r,
