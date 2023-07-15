@@ -26,18 +26,18 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
 
 
     for n in range(0, M+2):
-        K[n, 0] = 1 / (r * T) * (1 - np.exp(-r * (T-n*deltat))) - x_min * np.exp(-r*(T-t[n]))
-        K[n, N + 1] = 0
+        V[n, 0] = 1 / (r * T) * (1 - np.exp(-r * (T-n*deltat))) - x_min * np.exp(-r*(T-t[n]))
+        V[n, N + 1] = 0
 
     for i in range(N + 2):
-        K[M + 1, i] = np.maximum(-i * delta_x, 0)
+        V[M + 1, i] = np.maximum(-i * delta_x, 0)
 
     for n in range(0, M + 1):
         for i in range(1, N + 1):
             A[i] = - deltat * 0.25 * (-(i * r + 1/(T * delta_x)) - (sigma**2) * (i**2))
             B[i] = deltat * 0.25 * (-(i * r + 1/(T * delta_x)) + (sigma**2) * (i**2))
             D[i] = 1 + deltat * 0.5 * (sigma**2) * (i**2)
-            K[n, i] = A[i] * K[n, i - 1] + B[i] * K[n, i + 1] + D[i] * K[n, i] - A[i] * K[n, i + 1] - Kronecker(1, i) * B[1] * S0
+            K[n, i] = A[i] * V[n, i - 1] + B[i] * V[n, i + 1] + D[i] * V[n, i] - A[i] * V[n, i + 1] - Kronecker(1, i) * B[1] * S0
 
         D2[1] = D[1]
         K2[n, 1] = K[n, 1]
