@@ -264,31 +264,52 @@ def Log_return_symetrique(Nmc, T, N, K, So, r, sigma):
 #                 x[:,j,k]= np.linalg.solve(M,F)
 #     return x
 
-def Crank_Nicolson(Kmax, S0, r, T, N, M, x_max, x_min, sigma):
-    x = np.linspace(x_min, x_max, N + 1)
-    t = np.linspace(0, T, M + 1)
+def Crank_Nicolson(r, T, N, M, x_max, x_min, sigma):
+    x = np.linspace(x_min, x_max, N + 2)
+    t = np.linspace(0, T, M + 2)
     deltat = T / (M + 1)
     delta_x = (x_max - x_min) / (N + 1)
 
-    V = np.zeros(shape=(M + 1, N + 1))
-    A = np.zeros(N + 1)
-    B = np.zeros(N + 1)
-    C = np.zeros(N + 1)
+    V = np.zeros(shape=(N + 2, M + 2))
+    A = np.zeros(N + 2)
+    B = np.zeros(N + 2)
+    C = np.zeros(N + 2)
 
-    V[:, 0] = 0
+    # V[:, 0] = np.maximum()
 
-    for n in range(1, M + 2):
-        V[0, n] = 1 / (r * T) * (1 - np.exp(-r * t[n]))
-        V[n, N] = 0
+    for n in range(0, M+1):
+        V[0, n] = 1 / (r * T) * (1 - np.exp(-r * (T-n*deltat))) - x_min*np.exp(-r*(T-t[n]))
+        V[N + 1, n] = 0
+
+    for i in range(0,N+2):
+        V[i, M+1] = np.maximum(-i*delta_x, 0)
 
     for n in range(0, M + 1):
         for i in range(1, N + 1):
-            A[i] = deltat((sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 - (1 / T + r * x[i]) / 2 * delta_x)
-            B[i] = deltat(-(sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 - (1 / deltat))
-            C[i] = deltat((sigma ** 2 * x[i] ** 2) / 2 * delta_x ** 2 + (1 / T + r * x[i]) / 2 * delta_x)
+            A[i] = - deltat*0.25*(-(i*r + 1/(T*delta_x)) - (sigma**2)*(i**2))
+            B[i] = deltat*0.25*(-(i*r + 1/(T*delta_x)) + (sigma**2)*(i**2))
+            C[i] = 1 + deltat*0.5*(sigma**2)*(i**2)
 
-            V[i, n + 1] = A[i] * V[i - 1, n] + B[i] * V[i, n] + C[i] * V[i + 1, n]
+            # Solve tridiagonal system of equations
+            P = np.zeros(N + 2)
+            Q = np.zeros(N + 2)
 
+            P[1] = A[1] / C[1]
+            Q[1] = V[1, n] / C[1]
+
+            for i in range(2, N + 1):
+                P[i] = A[i] / (C[i] - B[i] * P[i - 1])
+                Q[i] = (V[i, n] - B[i] * Q[i - 1]) / (C[i] - B[i] * P[i - 1])
+
+            for i in range(N, 1, -1):
+                V[i, n + 1] = P[i] * V[i + 1, n + 1] + Q[i]
+
+    plt.plot(x, V[:, M], label="option_price")
+    plt.xlabel('Spot Price')
+    plt.ylabel('Option Price')
+    plt.title('Asian Option Pricing')
+    plt.legend()
+    plt.show()
     return V
 
 
@@ -337,29 +358,29 @@ if __name__ == '__main__':
     gamm = np.zeros(len(S))
     edp = np.zeros(len(S))
 
-    for i in range(len(S)):
-        # calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
-        # puts[i], puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
-        # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
-        gamm[i] = gamma(S[i], r, K, T, sigma, N, Nmc, h)
-        # print("Asian call option price:", calls[i])
-        # print("Asian put option price:", puts[i])
-        # edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
-        # callsFloat[i], calls_geoFloat[i] = asian_option_price_call_flottant(S[i], r, K, T, N, sigma, Nmc)
-
-    plt.plot(S, callsFloat, label='Asian Call arithmétique flottant')
-    plt.plot(S, calls_geoFloat, label='Asian Call géométrique flottant')
-
-    plt.plot(S, calls, label='Asian Call arithmétique')
-    plt.plot(S, edp, label='edp')
-    plt.plot(S, puts, label='Asian Put arithmétique')
-    plt.plot(S, calls_geo, label='Asian Call géométrique')
-    plt.plot(S, puts_geo, label='Asian Put géométrique')
-    plt.xlabel('$S_0$')
-    plt.ylabel('Price Value')
-    plt.legend()
-    # plt.savefig('Graph\AsianOptionPrice.png')
-    plt.show()
+    # for i in range(len(S)):
+    #     # calls[i], calls_geo[i] = asian_option_price_call(S[i], r, K, T, N, sigma, Nmc)
+    #     # puts[i], puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
+    #     # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
+    #     gamm[i] = gamma(S[i], r, K, T, sigma, N, Nmc, h)
+    #     # print("Asian call option price:", calls[i])
+    #     # print("Asian put option price:", puts[i])
+    #     # edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
+    #     # callsFloat[i], calls_geoFloat[i] = asian_option_price_call_flottant(S[i], r, K, T, N, sigma, Nmc)
+    #
+    # plt.plot(S, callsFloat, label='Asian Call arithmétique flottant')
+    # plt.plot(S, calls_geoFloat, label='Asian Call géométrique flottant')
+    #
+    # plt.plot(S, calls, label='Asian Call arithmétique')
+    # plt.plot(S, edp, label='edp')
+    # plt.plot(S, puts, label='Asian Put arithmétique')
+    # plt.plot(S, calls_geo, label='Asian Call géométrique')
+    # plt.plot(S, puts_geo, label='Asian Put géométrique')
+    # plt.xlabel('$S_0$')
+    # plt.ylabel('Price Value')
+    # plt.legend()
+    # # plt.savefig('Graph\AsianOptionPrice.png')
+    # plt.show()
     #
     # plt.plot(S, delt, label='delta call')
     # plt.xlabel('$S_0$')
@@ -368,42 +389,55 @@ if __name__ == '__main__':
     # plt.savefig('Graph\delta.png')
     # plt.show()
 
-    plt.plot(S, gamm, label='gamma call')
-    plt.xlabel('$S_0$')
-    plt.ylabel('Price Value')
-    plt.legend()
-    plt.savefig('Graph\gamma.png')
-    plt.show()
+    # plt.plot(S, gamm, label='gamma call')
+    # plt.xlabel('$S_0$')
+    # plt.ylabel('Price Value')
+    # plt.legend()
+    # plt.savefig('Graph\gamma.png')
+    # plt.show()
+    #
+    # S0 = 10
+    # K = 1
+    # r = 0.1
+    # sigma = 0.5
+    # T = 1
+    # N = np.linspace(10, 100, 100)
+    # Nmc = 1000
+    #
+    # option_price = np.zeros(len(N))
+    # option_price_geo = np.zeros(len(N))
+    # option_price_red = np.zeros(len(N))
+    # option_price_red_geo = np.zeros(len(N))
+    #
+    # for i in range(len(N)):
+    #     option_price[i], option_price_geo[i], option_price_red[i], option_price_red_geo[i] = Log_return_symetrique(Nmc,
+    #                                                                                                                T,
+    #                                                                                                                int(
+    #                                                                                                                    N[
+    #                                                                                                                        i]),
+    #                                                                                                                K,
+    #                                                                                                                S0,
+    #                                                                                                                r,
+    #                                                                                                                sigma)
+    #
+    # # plt.plot(S, Valeur1, label="estime1")
+    # plt.plot(N, option_price, label="option_price")
+    # plt.plot(N, option_price_geo, label="estoption_price_geo")
+    # plt.plot(N, option_price_red, label="option_price_red")
+    # plt.plot(N, option_price_red_geo, label="option_price_red_geo")
+    #
+    # plt.legend()
+    # plt.show()
 
-    S0 = 10
-    K = 1
-    r = 0.1
-    sigma = 0.5
-    T = 1
-    N = np.linspace(10, 100, 100)
-    Nmc = 1000
+    x_max = 2
+    x_min = 0
+    M = 999
+    N = 99
+    r = 0.002
+    sigma = 0.3
+    T =1
+    K = 100
+    S0 = 100
 
-    option_price = np.zeros(len(N))
-    option_price_geo = np.zeros(len(N))
-    option_price_red = np.zeros(len(N))
-    option_price_red_geo = np.zeros(len(N))
+    V = Crank_Nicolson(r, T, N, M, x_max, x_min, sigma)
 
-    for i in range(len(N)):
-        option_price[i], option_price_geo[i], option_price_red[i], option_price_red_geo[i] = Log_return_symetrique(Nmc,
-                                                                                                                   T,
-                                                                                                                   int(
-                                                                                                                       N[
-                                                                                                                           i]),
-                                                                                                                   K,
-                                                                                                                   S0,
-                                                                                                                   r,
-                                                                                                                   sigma)
-
-    # plt.plot(S, Valeur1, label="estime1")
-    plt.plot(N, option_price, label="option_price")
-    plt.plot(N, option_price_geo, label="estoption_price_geo")
-    plt.plot(N, option_price_red, label="option_price_red")
-    plt.plot(N, option_price_red_geo, label="option_price_red_geo")
-
-    plt.legend()
-    plt.show()
