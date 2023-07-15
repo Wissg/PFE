@@ -7,10 +7,8 @@ def Kronecker(j, i):
     else:
         return 0
 
-import numpy as np
-import matplotlib.pyplot as plt
 
-# Votre fonction Crank_Nicolson
+# Crank_Nicolson
 
 def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
     x = np.linspace(x_min, x_max, N + 2)
