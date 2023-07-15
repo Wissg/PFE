@@ -33,11 +33,11 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
     for i in range(N + 2):
         V[M + 1, i] = np.maximum(-i * delta_x, 0)
 
-    for i in range(1, N + 1):
-        for n in range(0, M + 1):
-            A[i] = - deltat * 0.25 * (-(i * r + 1 / (T * delta_x)) - (sigma ** 2) * (i ** 2))
-            B[i] = deltat * 0.25 * (-(i * r + 1 / (T * delta_x)) + (sigma ** 2) * (i ** 2))
-            D[i] = 1 + deltat * 0.5 * (sigma ** 2) * (i ** 2)
+    for n in range(0, M + 1):
+        for i in range(1, N + 1):
+            A[i] = - deltat * 0.25 * (-(i * r + 1/(T * delta_x)) - (sigma**2) * (i**2))
+            B[i] = deltat * 0.25 * (-(i * r + 1/(T * delta_x)) + (sigma**2) * (i**2))
+            D[i] = 1 + deltat * 0.5 * (sigma**2) * (i**2)
             K[n, i] = A[i] * V[n, i - 1] + B[i] * V[n, i + 1] + D[i] * V[n, i] - A[i] * V[n, i + 1] - Kronecker(1, i) * B[1] * S0
 
         D2[1] = D[1]
@@ -50,8 +50,8 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
             V[n + 1, i] = (K2[n, i] - A[i] * V[n + 1, i + 1]) / D2[i]
 
     print(V)
-    plt.plot(x, K[0, :], label="t = 0")
-    plt.plot(x, K[M // 2, :], label="t = T/2")
+    plt.plot(x, V[0, :], label="t = 0")
+    plt.plot(x, V[M // 2, :], label="t = T/2")
     plt.xlabel('Variable x')
     plt.ylabel('Fonction f')
     plt.title('Fonction f en 2 dimensions en t=0 et t=T/2')
