@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d import Axes3D
 
+
 def euler(S0, r, sigma, T, K, N, M, x_max, x_min):
     x = np.linspace(x_min, x_max, N + 2)
     t = np.linspace(0, T, M + 2)
@@ -18,7 +19,8 @@ def euler(S0, r, sigma, T, K, N, M, x_max, x_min):
     for n in range(M, 0, -1):
         for i in range(1, N + 1):
             F[n - 1, i] = F[n, i] - delta_t * (1 / T + r * x[i]) * (F[n, i + 1] - F[n, i - 1]) / (2 * delta_x) + \
-                          sigma ** 2 * x[i] ** 2 * delta_t / (2 * delta_x ** 2) * (F[n, i + 1] - 2 * F[n, i] + F[n, i - 1])
+                          sigma ** 2 * x[i] ** 2 * delta_t / (2 * delta_x ** 2) * (
+                                      F[n, i + 1] - 2 * F[n, i] + F[n, i - 1])
 
     # Create a meshgrid to plot the surface
     X, T = np.meshgrid(x, t)
@@ -27,13 +29,14 @@ def euler(S0, r, sigma, T, K, N, M, x_max, x_min):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(X, T, F, cmap='viridis', edgecolor='none')
-    ax.view_init(elev=10, azim= 1)
+    ax.view_init(elev=10, azim=1)
     ax.set_xlabel('x')
     ax.set_ylabel('t')
     ax.set_zlabel('f(t, x)')
     ax.set_title('Numerical Solution using Explicit Euler Method')
     plt.savefig('euler_explicit.png')
     plt.show()
+
 
 if __name__ == '__main__':
     x_max = 1
