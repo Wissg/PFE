@@ -19,13 +19,13 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
 
     V = np.zeros(shape=(M + 2, N + 2))
     C = np.zeros(shape=(M + 2, N + 2))
-    K = np.zeros((M + 2, N + 2))
+    K = np.zeros(shape=(M + 2, N + 2))
     K2 = np.zeros(shape=(M + 2, N + 2))
 
-    A = np.zeros(N + 1)
-    B = np.zeros(N + 1)
-    D = np.zeros(N + 1)
-    D2 = np.zeros(N + 1)
+    A = np.zeros(N + 2)
+    B = np.zeros(N + 2)
+    D = np.zeros(N + 2)
+    D2 = np.zeros(N + 2)
 
     for n in range(0, M + 2):
         V[n, 0] = 1 / (r * T) * (1 - np.exp(-r * (T - n * deltat))) - x_min * np.exp(-r * (T - t[n]))
@@ -37,14 +37,17 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
     # for n in range(0, M + 1):
     for n in range(1, M + 1):
         for i in range(1, N + 1):
-            A[i] = - deltat * 0.25 * (-(i * r + 1/(T * delta_x)) - (sigma**2) * (i**2))
-            B[i] = deltat * 0.25 * (-(i * r + 1/(T * delta_x)) + (sigma**2) * (i**2))
+            A[i] = - deltat * 0.25 * (-(i * r + 1/(T * delta_x)) + (sigma**2) * (i**2))
+            B[i] = deltat * 0.25 * (-(i * r + 1/(T * delta_x)) - (sigma**2) * (i**2))
             D[i] = 1 + deltat * 0.5 * (sigma**2) * (i**2)
+            # A[i] = deltat * (-(sigma ** 2 * i ** 2) / (2 * delta_x ** 2) - (1 / T + r * i) * 1 / (2 * delta_x))
+            # B[i] = deltat * ((sigma ** 2 * i ** 2) / (delta_x ** 2) + 1 / deltat)
+            # D[i] = deltat * (-(sigma ** 2 * i ** 2) / (2 * delta_x ** 2) + (1 / T + r * i) * 1 / (2 * delta_x))
             h = 1 / (r * T) * (1 - np.exp(-r * (T - (n - 1) * deltat)))
             # K[n, i] = A[i] * V[n - 1, i + 1] + B[i] * V[n - 1, i - 1] + D[i] * V[n - 1, i] - Kronecker(1, i) * B[1] * h
-            # K[n, i] = A[i] * V[n, i - 1] + B[i] * V[n, i + 1] + D[i] * V[n, i] - Kronecker(1, i) * B[1] * h
-            K[n, i] = B[i] * V[n, i - 1] + A[i] * V[n, i + 1] + D[i] * V[n, i] - Kronecker(1, i) * B[1] * h
-
+            K[n, i] = A[i] * V[n, i - 1] + B[i] * V[n, i + 1] + D[i] * V[n, i] - Kronecker(1, i) * B[1] * h
+            # K[n, i] = B[i] * V[n, i - 1] + A[i] * V[n, i + 1] + D[i] * V[n, i] - Kronecker(1, i) * B[1] * h
+            # K[n + 1, i] = A[i] * V[n, i - 1] + B[i] * V[n, i] + D[i] * V[n, i + 1] - Kronecker(1, i) * B[1] * h
 
         D2[1] = D[1]
         K2[n, 1] = K[n, 1]
@@ -79,6 +82,7 @@ def Crank_Nicolson(S0, r, T, N, M, x_max, x_min, sigma):
     plt.show()
     return V
 
+
 # Paramètres
 
 Xmin = 0
@@ -91,7 +95,7 @@ sigma = 0.3
 N = 99
 M = 999
 
-S = np.linspace(1,50,50)
+S = np.linspace(1, 50, 50)
 V = np.zeros(len(S))
 x = np.linspace(Xmin, Xmax, N + 2)
 
@@ -99,6 +103,5 @@ x = np.linspace(Xmin, Xmax, N + 2)
 
 Crank_Nicolson(S0, r, T, N, M, Xmax, Xmin, sigma)
 
-fig = plt.figure(figsize =(14, 9))
-ax = plt.axes(projection ='3d')
-
+fig = plt.figure(figsize=(14, 9))
+ax = plt.axes(projection='3d')
