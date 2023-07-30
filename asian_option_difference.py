@@ -34,7 +34,7 @@ def euler(S0, r, sigma, T, K, N, M, x_max, x_min):
     ax.set_ylabel('t')
     ax.set_zlabel('f(t, x)')
     ax.set_title('Numerical Solution using Explicit Euler Method')
-    plt.savefig('euler_explicit.png')
+    plt.savefig('Graph/euler_explicit.png')
     plt.show()
 
 
