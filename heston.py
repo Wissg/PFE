@@ -75,3 +75,28 @@ ax.set_ylabel('Volatility ($\sigma^2$)')
 ax.set_zlabel('Price of option')
 plt.savefig('Graph/heston.png')
 plt.show()
+
+# Calculate implied volatility (inverse of Black-Scholes formula) for each mu and sigma2
+implied_volatility = np.sqrt(2 * np.pi) / (K * np.exp(-mu_v) * Z)
+
+# Create a 3D plot to visualize the volatility smile
+fig = plt.figure(figsize=(10, 8))
+ax = fig.add_subplot(111, projection='3d')
+
+# Create a meshgrid for mu_v and sigma2_v
+MU_V, SIGMA2_V = np.meshgrid(mu_v, sigma2_v)
+
+# Plot the volatility smile surface
+surf = ax.plot_surface(MU_V, SIGMA2_V, implied_volatility, cmap=cm.coolwarm, antialiased=False)
+
+# Add labels and title
+ax.set_xlabel('Interest rate ($\mu$)')
+ax.set_ylabel('Volatility ($\sigma^2$)')
+ax.set_zlabel('Implied Volatility')
+plt.title("Volatility Smile (Implied Volatility)")
+plt.savefig('Graph/heston_implied_vol.png')
+plt.colorbar(surf)
+
+plt.show()
+
+
