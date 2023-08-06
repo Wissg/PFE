@@ -5,8 +5,9 @@ from matplotlib import cm
 
 
 # Function to perform Monte Carlo simulation for option pricing
+
 def monte_carlo_simulation(s0, K, drift, vol, T, simulations):
-    random_matrix = np.random.normal(0, 1, size=(simulations, int(T * 3)))  # Utilisez un multiple de T pour le nombre de colonnes
+    random_matrix = np.random.normal(0, 1, size=(simulations, int(T * 3)))  # Use a multiple of T for the number of columns
     s_paths = np.zeros((simulations, int(T) + 1))
     s_paths[:, 0] = s0
 
@@ -15,7 +16,9 @@ def monte_carlo_simulation(s0, K, drift, vol, T, simulations):
 
     P = np.mean(s_paths, axis=1)
     sample_payoff = np.maximum(P - K, 0)
-    return np.mean(sample_payoff) * np.exp(-drift * T)
+    discounted_payoff = sample_payoff * np.exp(-drift * T)
+
+    return np.mean(discounted_payoff)
 
 
 
