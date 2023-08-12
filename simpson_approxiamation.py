@@ -65,4 +65,5 @@ if __name__ == '__main__':
     plt.title("Prix de l'option asiatique en fonction de la volatilité")
     plt.legend()
     plt.grid(True)
+    plt.savefig("Graph/simpsonHomer.png")
     plt.show()
