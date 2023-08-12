@@ -56,3 +56,26 @@ if __name__ == '__main__':
     plt.grid(True)
     plt.savefig("Graph/simpsonHomer.png")
     plt.show()
+
+    S_values = np.linspace(50, 150, 10)  # Variations du prix de l'actif sous-jacent
+    sigmas = np.linspace(0.1, 0.5, 10)  # Variations de la volatilité
+    Nmc = 1000  # Nombre d'itérations de Monte Carlo constant
+
+    # Calcul des prix des options asiatiques pour chaque combinaison de S et sigma
+    option_prices = np.zeros((len(S_values), len(sigmas)))
+
+    for i, S in enumerate(S_values):
+        for j, sigma in enumerate(sigmas):
+            option_prices[i, j] = asian_option_price_call(S, r, K, T, N, sigma, Nmc)
+
+    # Création du graphique 3D
+    sigma_grid, S_grid = np.meshgrid(sigmas, S_values)
+    fig = plt.figure(figsize=(10, 8))
+    ax = fig.add_subplot(111, projection='3d')
+    ax.plot_surface(sigma_grid, S_grid, option_prices, cmap='viridis')
+    ax.set_xlabel('Volatilité')
+    ax.set_ylabel('Prix de l\'actif sous-jacent (S)')
+    ax.set_zlabel('Prix de l\'option')
+    ax.set_title('Prix de l\'option asiatique en fonction de S et de la volatilité')
+    plt.savefig("Graph/simpsonMarge.png")
+    plt.show()
