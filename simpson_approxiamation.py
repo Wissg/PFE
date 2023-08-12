@@ -32,15 +32,12 @@ def asian_option_price_call(S0, r, K, T, N, sigma, Nmc):
     S = np.zeros(N + 1)
     payoffs = np.zeros(Nmc)
     payoffs_geo = np.zeros(Nmc)
-    n_segments = 100  # Nombre de segments pour la méthode de Simpson
 
     for i in range(Nmc):
-        S[0] = S0
-        np.random.seed(42)
-        W = np.random.randn(N + 1) * np.sqrt(N / n_segments)
-        integral_approximation = simpson_rule(lambda t: geometric_brownian_motion(t, S0, r, sigma, W), 0, N,
-                                              n_segments)
-        S_avg[i] = np.mean(integral_approximation)
+        W = np.random.randn(1) * np.sqrt(dt)
+        integral_approximation = simpson_rule(lambda t: geometric_brownian_motion(t, S0, r, sigma, W), 0, T,
+                                              N)
+        S_avg[i] = integral_approximation
         payoffs[i] = np.maximum(S_avg[i] - K, 0)
 
     option_price = np.exp(-r * T) * np.mean(payoffs)
@@ -49,12 +46,12 @@ def asian_option_price_call(S0, r, K, T, N, sigma, Nmc):
 
 if __name__ == '__main__':
     # Paramètres
-    S0 = 50
-    r = 0.4
-    K = 20
+    S0 = 100
+    r = 0.2
+    K = 100
     T = 1
     N = 100
-    sigmas = np.linspace(0.4, 0.5, 50)  # Variations de la volatilité
+    sigmas = np.linspace(0.1, 0.5, 5)  # Variations de la volatilité
     Nmc = 1000
 
     # Calcul des prix des options asiatiques pour chaque valeur de volatilité
