@@ -1,16 +1,5 @@
-import matplotlib.pyplot as plt
-import math
-import matplotlib.pyplot as plt
-from mpl_toolkits.mplot3d import Axes3D
-import numpy as np
-import pandas as pd
-import datetime as dt
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import norm
-import math
-import statistics
-from scipy import integrate as intg
 
 def geometric_brownian_motion(t, S0, mu, sigma, W):
     return S0 * np.exp((mu - 0.5 * sigma ** 2) * t + sigma * W)
