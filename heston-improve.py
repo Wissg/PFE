@@ -29,7 +29,8 @@ def monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, thet
 
     return np.mean(discounted_payoff)
 
-def calculate_vega(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0, h=0.01):
+
+def calculate_vega(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0, h=0.02):
     option_price_base = monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0)
     option_price_at_sigma_plus_h = monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, theta,
                                                                  sigma + h, v0)
@@ -54,17 +55,18 @@ def calculate_delta(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0, 
     delta = (option_price_at_s_plus_h - option_price_base) / h
     return delta
 
-def calculate_greeks(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0, h=0.1):
+
+def calculate_greeks(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0, h=1):
     option_price_base = monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0)
     option_price_at_s_plus_h = monte_carlo_simulation_heston(s0 + h, K, mu, T, simulations, N, rho, kappa, theta, sigma,
                                                              v0)
-    delta = (option_price_at_s_plus_h - option_price_base) / h
     option_price_at_s_minus_h = monte_carlo_simulation_heston(s0 - h, K, mu, T, simulations, N, rho, kappa, theta,
                                                               sigma, v0)
-    gamma = (option_price_at_s_plus_h - 2 * option_price_base + option_price_at_s_minus_h) / h ** 2
     option_price_at_sigma_plus_h = monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, theta,
                                                                  sigma + h, v0)
+    gamma = (option_price_at_s_plus_h - 2 * option_price_base + option_price_at_s_minus_h) / h ** 2
     vega = (option_price_at_sigma_plus_h - option_price_base) / h
+    delta = (option_price_at_s_plus_h - option_price_base) / h
     return delta, gamma, vega
 
 def calculate_option_combinations(monte_carlo_simulation_func, mu_v, rho_v, kappa_v, theta_v, sigma_v,
@@ -143,10 +145,10 @@ def plot_3d_graph(x_values, y_values, z_values, xlabel, ylabel, zlabel, title, s
     plt.show()
 
 
-######
+###############################
 # Option price get data
-######
-# Define ranges for parameters
+###############################
+# # Define ranges for parameters
 # mu_v = np.linspace(0.01, 0.1, 10)
 # rho_v = np.linspace(-0.9, 0.9, 10)
 # kappa_v = np.linspace(0.1, 2.0, 10)
@@ -158,19 +160,19 @@ def plot_3d_graph(x_values, y_values, z_values, xlabel, ylabel, zlabel, title, s
 # v0_values = np.linspace(0.04, 0.06, 10)  # volatilities
 #
 # # Set other parameters and option details
-# simulations = 1000
+# simulations = 100
 # N = 100
 #
 # # Calculate option prices for each combination of parameters
 # tab = calculate_option_combinations(monte_carlo_simulation_heston, mu_v, rho_v, kappa_v, theta_v, sigma_v,
 #                                     s0_values, K_values, T_values, v0_values)
-
-#save into a csv
+#
+# # save into a csv
 # save_to_csv(tab, mu_v, rho_v, kappa_v, theta_v, sigma_v,
 #             s0_values, K_values, T_values, v0_values)
-######
+###############################
 # Option price
-######
+###############################
 #
 # # Parameters
 # s0 = 100  # Prix initial de l'actif sous-jacent
@@ -218,37 +220,39 @@ def plot_3d_graph(x_values, y_values, z_values, xlabel, ylabel, zlabel, title, s
 #               f"Option Prices (Heston) rho = {rho} kappa = {kappa} theta_r = {theta}",
 #               "Graph/option_price_heston_vol.png")
 
-###########
+###############################
 # Greeks
-###########
+###############################
 # Define the functions calculate_vega, calculate_gamma, calculate_delta, and plot_3d_graph
 
 # Parameters
-s0_values = np.linspace(80, 120, 40)  # Range of S values
-T_values = np.linspace(0.1, 1.0, 10)  # Range of T values
+s0_values = np.linspace(10, 70, 40)  # Range of S values
+T_values = np.linspace(0.1, 1.0, 12)  # Range of T values
 v0 = 0.05
 N = 100
-simulations = 1000
+simulations = 5000
 kappa = 2  # Speed of mean reversion
 theta = 0.02  # Long-term mean of volatility
-sigma = 0.9  # Volatility of volatility
+sigma = 0.9
 v0 = 0.04  # Initial volatility
-mu = 0.01
+mu = 0.02
 rho = 0.03
-K = 100
+K = 40
 
 # Calculate Greeks for each combination of S and T values
 vega_values = np.zeros((len(s0_values), len(T_values)))
 gamma_values = np.zeros((len(s0_values), len(T_values)))
 delta_values = np.zeros((len(s0_values), len(T_values)))
-for i, s0 in tqdm(enumerate(s0_values), total=len(s0_values), desc="S0 Progress"):
+for i, s0 in tqdm(enumerate(s0_values), total=len(s0_values), desc="Greeks calcul"):
     for j, T in enumerate(T_values):
-        vega_values[i, j] = calculate_vega(s0, K, mu, T, simulations, N, rho, kappa, theta,
-                                           sigma, v0)
-        gamma_values[i, j] = calculate_gamma(s0, K, mu, T, simulations, N, rho, kappa, theta,
-                                             sigma, v0)
-        delta_values[i, j] = calculate_delta(s0, K, mu, T, simulations, N, rho, kappa, theta,
-                                             sigma, v0)
+        # vega_values[i, j] = calculate_vega(s0, K, mu, T, simulations, N, rho, kappa, theta,
+        #                                    sigma, v0)
+        # gamma_values[i, j] = calculate_gamma(s0, K, mu, T, simulations, N, rho, kappa, theta,
+        #                                      sigma, v0)
+        # delta_values[i, j] = calculate_delta(s0, K, mu, T, simulations, N, rho, kappa, theta,
+        #                                      sigma, v0)
+        delta_values[i, j], gamma_values[i, j], vega_values[i, j] = calculate_greeks(s0, K, mu, T, simulations, N, rho,
+                                                                                     kappa, theta, sigma, v0)
 
 T, S = np.meshgrid(T_values, s0_values)
 
@@ -271,13 +275,12 @@ plot_2d_graph(s0_values, gamma_values[:, T_index], 'Asset Price ($S$)', 'Gamma',
 plot_2d_graph(s0_values, delta_values[:, T_index], 'Asset Price ($S$)', 'Delta',
               f"Delta at T = {T_values[T_index]}", "Graph/plot_2d_delta.png")
 
-
-######
+###############################
 # Implied volatility smile plot
-######
+###############################
 # parameter
-mu_v = np.linspace(0.01, 0.1, 100)
-sigma_v = np.linspace(0.01, 0.9, 100)
+mu_v = np.linspace(0.01, 0.1, 25)
+sigma_v = np.linspace(0.01, 0.9, 25)
 s0 = 100
 K = 100
 T = 1
@@ -291,10 +294,11 @@ v0 = 0.04
 
 Z = np.zeros((len(mu_v), len(sigma_v)))
 
-for i, sigma2 in enumerate(tqdm(sigma_v, desc="Sigma Progress")):
+for i, sigma2 in enumerate(tqdm(sigma_v, desc="Implied Volatility Progress")):
     for j, mu in enumerate(mu_v):
         Z[i, j] = monte_carlo_simulation_heston(s0, K, mu, T, simulations, N, rho, kappa, theta, sigma, v0)
 
 implied_volatility = np.sqrt(2 * np.pi) / (K * np.exp(-mu_v) * Z)
-plot_3d_graph(mu_v, sigma_v, implied_volatility, 'Interest rate ($\mu$)', 'Volatility ($\sigma^2$)',
+MU, SIGMA = np.meshgrid(mu_v, sigma_v)
+plot_3d_graph(MU, SIGMA, implied_volatility, 'Interest rate ($\mu$)', 'Volatility ($\sigma^2$)',
               'Implied Volatility', "Volatility Smile (Implied Volatility)", "Graph/heston_implied_vol.png")
