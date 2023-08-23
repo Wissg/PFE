@@ -77,11 +77,17 @@ V = np.zeros(shape=(len(S),len(A)))
 for k in range(len(S)):
     for j in range(len(A)):
         a = int(np.floor((K - A[j]/2)/S[k]*1/delta_x) + 1)
-        b = int(np.floor(T/2*delta_t) + 1)
-        if a - 1 >= N + 1 or b - 1 >= M + 1:
-            V[k, j] = 0
+        b = int(np.floor(T/2*(1/delta_t)) + 1)
+        if a - 1 >= N + 1 and b - 1 >= M + 1:
+            V[k, j] = V[k + 1,j + 1] + 1 
         else:
-            V[k, j] = S[k] * euler(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
+            if a - 1 >= N + 1:
+                V[k, j] = V[k + 1, j] + 1
+            else:
+                if b - 1 >= M + 1:
+                    V[k, j] = V[k, j + 1] + 1
+                else:
+                    V[k, j] = S[k] * euler(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
     
 Ss, Aa = np.meshgrid(S, A)
 fig = plt.figure()
@@ -107,6 +113,7 @@ def euler_put(S0, r, sigma, T, K, N, M, x_max, x_min):
     F = np.zeros(shape=(M + 2, N + 2))
 
     # Set initial and boundary conditions
+    
     F[:, N + 1] = 1 / (r * T) * (np.exp(-r * (T - t)) - 1) + x_max*np.exp(-r*(T - t))
     F[:, 0] = 0
     F[M + 1, :] = np.maximum(x, 0)
@@ -124,7 +131,7 @@ def euler_put(S0, r, sigma, T, K, N, M, x_max, x_min):
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
     ax.plot_surface(X, T, F, cmap='viridis', edgecolor='none')
-    ax.view_init(elev=30, azim=200)
+    ax.view_init(elev=30, azim=100)
     ax.set_xlabel('x')
     ax.set_ylabel('t')
     ax.set_zlabel('f(t, x)')
@@ -137,21 +144,21 @@ if __name__ == '__main__':
     x_max = 2
     x_min = 0
     S0 = 10
-    r = 0.4
-    sigma = 0.3
+    r = 0.04
+    sigma = 0.1
     T = 1
     K = 10
     N = 100
-    M = 999
+    M = 99
     F = euler_put(S0, r, sigma, T, K, N, M, x_max, x_min)
     
-S0 = np.linspace(1,20,20)
+S0 = np.linspace(1,100,20)
 V = np.zeros(len(S0))
 delta_x = (x_max - x_min) / (N + 1)
 for i in range(len(S0)):
     a = int(np.floor(K/S0[i]*1/delta_x) + 1)
     if a - 1 >= N + 1:
-        V[i] = V[i+1] + 1
+        V[i] = V[i + 1] + 1
     else:
         V[i] = S0[i] * euler_put(S0[i], r, sigma, T, K, N, M, x_max, x_min)[0, a]
         
@@ -167,23 +174,17 @@ V = np.zeros(shape=(len(S),len(A)))
 for k in range(len(S)):
     for j in range(len(A)):
         a = int(np.floor((K - A[j]/2)/S[k]*1/delta_x) + 1)
-        b = int(np.floor(T/2*delta_t) + 1)
-        if a - 1 >= N + 1 and b - 1 >= M + 1:
-            V[k, j] = V[k + 1,j + 1] + 1 
-        else:
-            if a - 1 >= N + 1:
+        b = int(np.floor(T/2*(1/delta_t)) + 1)
+        if a - 1 >= N + 1:
                 V[k, j] = V[k + 1, j] + 1
-            else:
-                if b - 1 >= M + 1:
-                    V[k, j] = V[k, j + 1] + 1
-                else:
-                    V[k, j] = S[k] * euler_put(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
+        else:
+                V[k, j] = S[k] * euler_put(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
     
 Ss, Aa = np.meshgrid(S, A)
 fig = plt.figure()
 ax = fig.add_subplot(projection='3d')
 ax.plot_surface(Ss, Aa, V, cmap='viridis', edgecolor='none')
-ax.view_init(elev=10, azim=1)
+ax.view_init(elev=50, azim=1)
 ax.set_xlabel('S')
 ax.set_ylabel('A')
 ax.set_zlabel('V')
@@ -265,11 +266,17 @@ V = np.zeros(shape=(len(S),len(A)))
 for k in range(len(S)):
     for j in range(len(A)):
         a = int(np.floor((K - A[j]/2)/S[k]*1/delta_x) + 1)
-        b = int(np.floor(T/2*delta_t) + 1)
-        if a - 1 >= N + 1 or b - 1 >= M + 1:
-            V[k, j] = 0
+        b = int(np.floor(T/2*(1/delta_t)) + 1)
+        if a - 1 >= N + 1 and b - 1 >= M + 1:
+            V[k, j] = V[k + 1,j + 1] + 1 
         else:
-            V[k, j] = S[k] * euler_flottant_put(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
+            if a - 1 >= N + 1:
+                V[k, j] = V[k + 1, j] + 1
+            else:
+                if b - 1 >= M + 1:
+                    V[k, j] = V[k, j + 1] + 1
+                else:
+                    V[k, j] = S[k] * euler_flottant_put(S[k], r, sigma, T, K, N, M, x_max, x_min)[b, a]
     
 Ss, Aa = np.meshgrid(S, A)
 fig = plt.figure()
@@ -355,7 +362,7 @@ V = np.zeros(shape=(len(S),len(A)))
 for k in range(len(S)):
     for j in range(len(A)):
         a = int(np.floor((K - A[j]/2)/S[k]*1/delta_x) + 1)
-        b = int(np.floor(T/2*delta_t) + 1)
+        b = int(np.floor(T/2*(1/delta_t)) + 1)
         if a - 1 >= N + 1 and b - 1 >= M + 1:
             V[k, j] = V[k + 1,j + 1] + 1 
         else:

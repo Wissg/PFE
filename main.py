@@ -487,6 +487,34 @@ def gamma(S0, r, K, T, sigma, N, Nmc, h):
     #gamma = (C_up - 2*C + C_down)/h**2
     return gamma
 
+def gamma_put(S0, r, K, T, sigma, N, Nmc, h):
+    S = np.zeros(N + 1)
+    S[0] = S0
+    dt = T / N
+    payoff_down = np.zeros(Nmc)
+    payoff_up = np.zeros(Nmc)
+
+    for i in range(Nmc):
+        S[0] = S0
+        for t in range(1, N + 1):
+            dW = np.sqrt(dt) * np.random.randn(1)
+            S[t] = S[t - 1] * np.exp((r - 0.5 * sigma ** 2) * dt + sigma * dW)
+
+        # Calculate the delta using finite difference
+        A = np.mean(S[1:], axis=0)
+        A_up = np.mean((S[1:] * (1 + h))[1:], axis=0)
+        A_down = np.mean((S[1:] * (1 - h))[1:], axis=0)
+        payoff = np.maximum(K - A, 0)
+        payoff_up[i] = np.maximum(K - A_up, 0)
+        payoff_down[i] = np.maximum(K - A_down, 0)
+
+    C = np.exp(-r * T) * np.mean(payoff)
+    C_up = np.exp(-r * T) * np.mean(payoff_up)
+    C_down = np.exp(-r * T) * np.mean(payoff_down)
+
+    gamma = ((C_up - C) / (S0 * h) - (C - C_down) / (S0 * h)) / (2 * S0 * h)
+    #gamma = (C_up - 2*C + C_down)/h**2
+    return gamma
 
 def phi(t, x, T, S, Nmc, N, dt):
     I2 = np.zeros(Nmc)
@@ -738,6 +766,7 @@ if __name__ == '__main__':
     puts_geo = np.zeros(len(S))
     delt = np.zeros(len(S))
     gamm = np.zeros(len(S))
+    gamm_put = np.zeros(len(S))
     edp = np.zeros(len(S))
 
     for i in range(len(S)):
@@ -745,6 +774,7 @@ if __name__ == '__main__':
     #     # puts[i], puts_geo[i] = asian_option_price_put(S[i], r, K, T, N, sigma, Nmc)
     #     # delt[i] = delta(S[i], r, K, T, sigma, N, Nmc, h)
            gamm[i] = gamma(S[i], r, K, T, sigma, N, Nmc, h)
+           gamm_put[i] = gamma_put(S[i], r, K, T, sigma, N, Nmc, h)
     #     # print("Asian call option price:", calls[i])
     #     # print("Asian put option price:", puts[i])
     #     # edp[i] = EDP_2Dim_fixe(S0, r, K, T, N, sigma, Nmc)
@@ -772,6 +802,13 @@ if __name__ == '__main__':
     # plt.show()
 
     plt.plot(S, gamm, label='gamma call')
+    plt.xlabel('$S_0$')
+    plt.ylabel('Gamma')
+    plt.legend()
+    #plt.savefig('Graph\gamma.png')
+    plt.show()
+    
+    plt.plot(S, gamm, label='gamma put')
     plt.xlabel('$S_0$')
     plt.ylabel('Gamma')
     plt.legend()
